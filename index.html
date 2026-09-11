@@ -793,8 +793,10 @@ function renderGate() {
     return html;
   }
 
-  html += '<p class="lead">Cet outil est réservé aux personnes ayant reçu un code d\'accès de leur coach A4P Mental.</p>';
-  html += '<span class="gate-label">Code d\'accès</span>';
+  html += '<p class="lead">Cet outil est réservé aux personnes ayant reçu un email et un code d\'accès de leur coach A4P Mental.</p>';
+  html += '<span class="gate-label">Adresse email</span>';
+  html += '<input class="gate-input" id="gate-email" type="email" placeholder="ton.email@exemple.fr" autocomplete="off" style="text-transform:none;letter-spacing:0;" ' + (state.gateLoading ? 'disabled' : '') + '>';
+  html += '<span class="gate-label" style="margin-top:16px;">Code d\'accès</span>';
   html += '<input class="gate-input" id="gate-code" type="text" placeholder="EX. AB12CD" maxlength="20" autocomplete="off" ' + (state.gateLoading ? 'disabled' : '') + '>';
   if (state.gateError) {
     html += '<p class="gate-error">' + state.gateError + '</p>';
@@ -808,8 +810,16 @@ function renderGate() {
 }
 
 function submitGateCode() {
-  var input = document.getElementById("gate-code");
-  var code = (input.value || "").trim().toUpperCase();
+  var codeInput = document.getElementById("gate-code");
+  var emailInput = document.getElementById("gate-email");
+  var code = (codeInput.value || "").trim().toUpperCase();
+  var email = (emailInput.value || "").trim();
+
+  if (!email) {
+    state.gateError = "Merci de saisir ton adresse email.";
+    render();
+    return;
+  }
 
   if (!code) {
     state.gateError = "Merci de saisir ton code d'accès.";
@@ -827,7 +837,7 @@ function submitGateCode() {
   state.gateError = "";
   render();
 
-  supabaseClient.rpc("cap_consume_attempt", { p_code: code }).then(function (response) {
+  supabaseClient.rpc("cap_consume_attempt", { p_code: code, p_email: email }).then(function (response) {
     state.gateLoading = false;
     var data = response.data;
     var error = response.error;
@@ -1008,10 +1018,16 @@ function bind() {
   var gateBtn = document.getElementById("gate-btn");
   if (gateBtn) gateBtn.onclick = submitGateCode;
 
-  var gateInput = document.getElementById("gate-code");
-  if (gateInput) {
-    gateInput.focus();
-    gateInput.onkeydown = function (e) {
+  var gateEmailInput = document.getElementById("gate-email");
+  var gateCodeInput = document.getElementById("gate-code");
+  if (gateEmailInput) {
+    gateEmailInput.focus();
+    gateEmailInput.onkeydown = function (e) {
+      if (e.key === "Enter") { submitGateCode(); }
+    };
+  }
+  if (gateCodeInput) {
+    gateCodeInput.onkeydown = function (e) {
       if (e.key === "Enter") { submitGateCode(); }
     };
   }
