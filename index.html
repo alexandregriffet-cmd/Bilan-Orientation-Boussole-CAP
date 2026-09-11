@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Boussole A4P — Ton Code CAP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Georgia&family=Dancing+Script:wght@600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --navy: #0D1B3E;
+    --navy-soft: #16285a;
+    --amber: #FFBD59;
+    --amber-deep: #E6A03F;
+    --paper: #F7F8FC;
+    --ink: #101827;
+    --ink-soft: #4A5170;
+    --line: #E2E6F0;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    background: var(--paper);
+    background-color: #F7F8FC;
+    margin: 0;
+    padding: 0;
+    font-family: Georgia, 'Times New Roman', serif;
+    color: var(--ink);
+  }
+  body {
+    display: flex;
+    justify-content: center;
+    min-height: 100vh;
+  }
+  .app {
+    width: 100%;
+    max-width: 560px;
+    padding: 22px 18px 60px;
+    background: #F7F8FC;
+    background-color: #F7F8FC;
+  }
+  .brand {
+    background: var(--navy);
+    border-radius: 28px;
+    padding: 30px 26px 26px;
+    color: #fff;
+    text-align: center;
+    box-shadow: 0 12px 30px rgba(13,27,62,0.25);
+  }
+  .brand .mark {
+    width: 62px;
+    height: 62px;
+    margin: 0 auto 14px;
+    border-radius: 16px;
+    background: rgba(255,255,255,0.08);
+    border: 1.5px solid rgba(255,189,89,0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .brand .mark svg { width: 34px; height: 34px; }
+  .brand .word {
+    font-size: 15px;
+    letter-spacing: 0.06em;
+    color: var(--amber);
+    margin: 0 0 4px;
+    font-family: Georgia, serif;
+  }
+  .brand h1 {
+    font-size: 28px;
+    line-height: 1.25;
+    margin: 6px 0 8px;
+    font-weight: 700;
+  }
+  .brand .tag {
+    font-family: 'Dancing Script', cursive;
+    font-size: 19px;
+    color: rgba(255,255,255,0.85);
+    margin: 0;
+  }
+  .card {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    padding: 26px 24px;
+    margin-top: 18px;
+    box-shadow: 0 6px 18px rgba(16,24,39,0.05);
+  }
+  .lead {
+    font-size: 16px;
+    line-height: 1.65;
+    color: var(--ink-soft);
+    margin: 0 0 10px;
+  }
+  .lead strong { color: var(--ink); }
+  .meta-line {
+    display: flex;
+    gap: 18px;
+    margin: 18px 0 6px;
+    flex-wrap: wrap;
+  }
+  .meta-item { text-align: left; }
+  .meta-item .num { font-size: 22px; font-weight: 700; color: var(--navy); }
+  .meta-item .lbl { font-size: 12.5px; color: var(--ink-soft); font-family: Arial, sans-serif; }
+  button {
+    font-family: Georgia, serif;
+    cursor: pointer;
+    border: none;
+  }
+  .btn-primary {
+    width: 100%;
+    background: var(--amber);
+    color: var(--navy);
+    font-size: 17px;
+    font-weight: 700;
+    padding: 16px 18px;
+    border-radius: 16px;
+    margin-top: 20px;
+    transition: transform 0.15s ease, background 0.15s ease;
+  }
+  .btn-primary:hover { background: var(--amber-deep); }
+  .btn-primary:active { transform: scale(0.98); }
+  .btn-secondary {
+    width: 100%;
+    background: transparent;
+    color: var(--navy);
+    font-size: 15px;
+    font-weight: 600;
+    padding: 12px 18px;
+    border-radius: 16px;
+    margin-top: 10px;
+    border: 1.5px solid var(--line);
+  }
+  .axis-legend {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 16px;
+  }
+  .axis-chip {
+    flex: 1;
+    background: var(--paper);
+    border-radius: 12px;
+    padding: 10px 6px;
+    text-align: center;
+    font-family: Arial, sans-serif;
+  }
+  .axis-chip .l { font-size: 15px; font-weight: 700; color: var(--navy); }
+  .axis-chip .s { font-size: 10.5px; color: var(--ink-soft); display: block; margin-top: 2px; }
+
+  /* progress */
+  .progress-wrap { margin-bottom: 22px; }
+  .progress-top {
+    display: flex;
+    justify-content: space-between;
+    font-family: Arial, sans-serif;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    margin-bottom: 8px;
+  }
+  .progress-track {
+    height: 8px;
+    background: var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--amber);
+    border-radius: 6px;
+    transition: width 0.25s ease;
+  }
+
+  .question-text {
+    font-size: 20px;
+    line-height: 1.4;
+    color: var(--navy);
+    margin: 4px 0 22px;
+    font-weight: 700;
+  }
+  .choice {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: var(--paper);
+    border: 1.5px solid var(--line);
+    border-radius: 16px;
+    padding: 16px 18px;
+    font-size: 15.5px;
+    line-height: 1.5;
+    color: var(--ink);
+    margin-bottom: 12px;
+    font-family: Georgia, serif;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+  .choice:hover {
+    border-color: var(--amber);
+    background: #FFF7EA;
+  }
+  .choice .k {
+    display: inline-block;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--navy);
+    color: #fff;
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    text-align: center;
+    line-height: 22px;
+    margin-right: 10px;
+  }
+  .back-link {
+    display: inline-block;
+    margin-top: 4px;
+    font-family: Arial, sans-serif;
+    font-size: 13px;
+    color: var(--ink-soft);
+    text-decoration: underline;
+    background: none;
+    padding: 0;
+  }
+
+  /* results */
+  .code-row {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin: 6px 0 4px;
+  }
+  .code-tile {
+    width: 58px;
+    height: 58px;
+    background: var(--navy);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--amber);
+    opacity: 0;
+    transform: translateY(8px);
+    animation: rise 0.5s ease forwards;
+  }
+  .code-tile:nth-child(1) { animation-delay: 0.05s; }
+  .code-tile:nth-child(2) { animation-delay: 0.2s; }
+  .code-tile:nth-child(3) { animation-delay: 0.35s; }
+  .code-tile:nth-child(4) { animation-delay: 0.5s; }
+  @keyframes rise { to { opacity: 1; transform: translateY(0); } }
+
+  .type-name {
+    text-align: center;
+    font-size: 24px;
+    color: var(--navy);
+    margin: 14px 0 4px;
+  }
+  .type-baseline {
+    text-align: center;
+    font-family: 'Dancing Script', cursive;
+    font-size: 20px;
+    color: var(--ink-soft);
+    margin: 0 0 4px;
+  }
+  .strength-line {
+    text-align: center;
+    font-family: Arial, sans-serif;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    margin-bottom: 6px;
+  }
+
+  .section-title {
+    font-size: 15px;
+    letter-spacing: 0.02em;
+    color: var(--navy);
+    border-bottom: 2px solid var(--amber);
+    display: inline-block;
+    padding-bottom: 3px;
+    margin: 26px 0 12px;
+  }
+  ul.report-list {
+    margin: 0;
+    padding-left: 20px;
+  }
+  ul.report-list li {
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+    margin-bottom: 8px;
+  }
+  p.report-p {
+    font-size: 15px;
+    line-height: 1.65;
+    color: var(--ink-soft);
+    margin: 0 0 4px;
+  }
+  .coach-box {
+    margin-top: 24px;
+    background: var(--navy);
+    border-radius: 18px;
+    padding: 20px 20px;
+    color: #fff;
+  }
+  .coach-box .who {
+    font-family: 'Dancing Script', cursive;
+    color: var(--amber);
+    font-size: 18px;
+    margin: 0 0 6px;
+  }
+  .coach-box p {
+    font-size: 15px;
+    line-height: 1.6;
+    margin: 0;
+    color: rgba(255,255,255,0.92);
+  }
+  .axis-bars { margin-top: 4px; }
+  .axis-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    font-family: Arial, sans-serif;
+  }
+  .axis-bar-row .name-l, .axis-bar-row .name-r {
+    font-size: 12px;
+    color: var(--ink-soft);
+    width: 62px;
+  }
+  .axis-bar-row .name-r { text-align: right; }
+  .axis-bar-track {
+    flex: 1;
+    height: 10px;
+    background: var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+  }
+  .axis-bar-fill {
+    height: 100%;
+    background: var(--amber);
+    border-radius: 6px;
+  }
+  .axis-bar-track-50 {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    height: 16px;
+  }
+  .axis-bar-half {
+    flex: 1;
+    height: 10px;
+    background: var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+    display: flex;
+  }
+  .axis-bar-half-l { justify-content: flex-end; margin-right: 1px; border-radius: 6px 0 0 6px; }
+  .axis-bar-half-r { justify-content: flex-start; margin-left: 1px; border-radius: 0 6px 6px 0; }
+  .axis-bar-fill-l, .axis-bar-fill-r {
+    height: 100%;
+    background: var(--amber);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--navy);
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  .axis-bar-fill-l { border-radius: 6px 0 0 6px; justify-content: flex-start; padding-left: 4px; }
+  .axis-bar-fill-r { border-radius: 0 6px 6px 0; justify-content: flex-end; padding-right: 4px; }
+  .axis-bar-center {
+    width: 2px;
+    height: 16px;
+    background: #C7CDE0;
+    flex-shrink: 0;
+  }
+  .axis-band-note {
+    font-family: Arial, sans-serif;
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    text-align: center;
+    margin: 2px 0 12px;
+  }
+  footer.disclaimer {
+    margin-top: 26px;
+    text-align: center;
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    color: #9AA1B8;
+    line-height: 1.5;
+  }
+  .gate-input {
+    width: 100%;
+    font-family: Arial, sans-serif;
+    font-size: 20px;
+    letter-spacing: 0.06em;
+    text-align: center;
+    text-transform: uppercase;
+    padding: 16px 14px;
+    border: 1.5px solid var(--line);
+    border-radius: 14px;
+    margin-top: 6px;
+    color: var(--navy);
+  }
+  .gate-input:focus { outline: none; border-color: var(--amber); }
+  .gate-error {
+    font-family: Arial, sans-serif;
+    font-size: 13.5px;
+    color: #C2410C;
+    margin-top: 10px;
+    text-align: center;
+  }
+  .gate-label {
+    font-family: Arial, sans-serif;
+    font-size: 13px;
+    color: var(--ink-soft);
+    display: block;
+    margin-top: 4px;
+  }
+  .spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(13,27,62,0.25);
+    border-top-color: var(--navy);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    vertical-align: middle;
+    margin-right: 8px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media print {
+    .no-print { display: none !important; }
+    body { background: #fff; }
+    .app { max-width: 100%; padding: 0; }
+  }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+
+<script>
+// ---------- CONFIGURATION SUPABASE ----------
+// Remplace ces deux valeurs par celles de TON projet Supabase
+// (Project Settings > API > Project URL / anon public key).
+var SUPABASE_URL = "https://TON-PROJET.supabase.co";
+var SUPABASE_ANON_KEY = "TA_CLE_ANON_PUBLIC";
+
+var supabaseClient = null;
+if (window.supabase && SUPABASE_URL.indexOf("TON-PROJET") === -1) {
+  supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+}
+
+// ---------- DATA ----------
+
+var AXES = [
+  { left: { letter: "T", label: "Terrain" },   right: { letter: "V", label: "Vision" } },
+  { left: { letter: "C", label: "Cœur" },      right: { letter: "R", label: "Raison" } },
+  { left: { letter: "O", label: "Organisé" },  right: { letter: "A", label: "Adaptable" } },
+  { left: { letter: "S", label: "Solo" },      right: { letter: "D", label: "Duo" } }
+];
+
+var Q_T_V = [
+  ["Tu apprends mieux en testant directement, en manipulant, en pratiquant.", "Tu apprends mieux en comprenant la théorie et le raisonnement derrière les choses."],
+  ["Un exposé qui te plaît part d'un exemple concret et d'un cas réel.", "Un exposé qui te plaît part d'une grande idée et l'explore en profondeur."],
+  ["Tu préfères un stage ou un job d'été à un cours magistral.", "Tu préfères lire un livre ou regarder un documentaire qui te fait réfléchir."],
+  ["Face à un problème, tu commences par essayer, quitte à te tromper.", "Face à un problème, tu commences par réfléchir avant d'agir."],
+  ["Tu retiens mieux ce que tu as vécu ou construit toi-même.", "Tu retiens mieux ce que tu as compris en profondeur, même sans l'avoir vécu."],
+  ["Tu te sens à l'aise avec des outils, des machines, ou un métier physique.", "Tu te sens à l'aise avec des concepts abstraits, des chiffres, ou des mots."],
+  ["Un métier qui te parle produit quelque chose de visible et concret.", "Un métier qui te parle fait avancer une idée, une recherche, un projet intellectuel."],
+  ["Tu préfères les matières où on applique une méthode : technologie, sport, arts appliqués.", "Tu préfères les matières où on explore des idées : philosophie, littérature, sciences théoriques."],
+  ["Tu aimes voir le résultat de ton travail rapidement.", "Tu acceptes qu'un projet demande une longue réflexion avant d'aboutir."],
+  ["Ce qui t'intéresse dans un métier, c'est le geste, l'action, le quotidien concret.", "Ce qui t'intéresse dans un métier, c'est la vision, le sens, la portée des idées."],
+  ["Tu préfères qu'on te montre comment faire plutôt qu'on te l'explique.", "Tu préfères qu'on t'explique le pourquoi avant de passer à l'action."],
+  ["Un bon week-end pour toi inclut une activité physique ou manuelle.", "Un bon week-end pour toi inclut une lecture, un film, une discussion qui fait réfléchir."],
+  ["Tu te souviens surtout des détails pratiques d'une situation.", "Tu te souviens surtout du sens général ou de la logique d'une situation."],
+  ["Tu préfères un métier où chaque jour ressemble à une mission concrète à accomplir.", "Tu préfères un métier où chaque jour nourrit une réflexion ou un projet à long terme."],
+  ["Tu aimes construire, réparer, fabriquer, organiser du concret.", "Tu aimes imaginer, théoriser, concevoir, explorer des idées."]
+];
+
+var Q_C_R = [
+  ["Face à une décision importante, tu écoutes d'abord ce que tu ressens.", "Face à une décision importante, tu analyses d'abord les faits."],
+  ["Dans un désaccord, tu penses avant tout à préserver la relation.", "Dans un désaccord, tu penses avant tout à trouver qui a objectivement raison."],
+  ["Tu choisirais une voie professionnelle qui a du sens pour les autres.", "Tu choisirais une voie professionnelle qui est logique et cohérente sur le papier."],
+  ["On te dit souvent que tu es empathique et à l'écoute.", "On te dit souvent que tu es rationnel et pragmatique."],
+  ["Un bon chef d'équipe, pour toi, comprend les gens.", "Un bon chef d'équipe, pour toi, prend les meilleures décisions objectives."],
+  ["Tu te souviens surtout de l'ambiance d'une situation, de ce que les gens ont ressenti.", "Tu te souviens surtout des faits, des chiffres, de ce qui s'est réellement passé."],
+  ["Quand un ami a un problème, tu réagis d'abord avec le cœur.", "Quand un ami a un problème, tu réagis d'abord en cherchant une solution logique."],
+  ["Tu préfères un métier centré sur l'humain, l'aide, la relation.", "Tu préfères un métier centré sur l'analyse, les données, les systèmes."],
+  ["Une critique te touche d'abord sur le plan personnel.", "Une critique, tu l'analyses d'abord sur le fond, sans trop y mettre d'émotion."],
+  ["Tu donnes la priorité à l'harmonie du groupe plutôt qu'à l'efficacité pure.", "Tu donnes la priorité à l'efficacité, même si ça crée des tensions."],
+  ["Ce qui te motive, c'est de sentir que tu aides ou que tu comprends quelqu'un.", "Ce qui te motive, c'est de résoudre un problème complexe, indépendamment de l'humain."],
+  ["Tu préfères convaincre en touchant les émotions.", "Tu préfères convaincre avec des arguments et des preuves."],
+  ["Une bonne décision, pour toi, respecte les valeurs et les personnes concernées.", "Une bonne décision, pour toi, est celle qui est la plus juste ou la plus efficace, point final."],
+  ["Tu es à l'aise pour parler de tes émotions et de celles des autres.", "Tu es plus à l'aise pour parler de faits, d'idées, de raisonnements."],
+  ["Tu choisirais un métier moins payé mais qui a un vrai sens humain pour toi.", "Tu choisirais un métier avec une logique claire et de bonnes perspectives, même sans lien humain fort."]
+];
+
+var Q_O_A = [
+  ["Tu préfères avoir un planning clair pour la semaine.", "Tu préfères garder de la place pour l'imprévu."],
+  ["Tu finis tes devoirs bien avant la date limite.", "Tu travailles souvent mieux sous la pression du dernier moment."],
+  ["Un bon projet suit des étapes définies à l'avance.", "Un bon projet évolue et s'ajuste en cours de route."],
+  ["Ton bureau ou ta chambre sont plutôt rangés et organisés.", "Ton bureau ou ta chambre sont plutôt vivants, en mouvement, un peu en désordre."],
+  ["Tu aimes savoir précisément ce qui t'attend.", "Tu aimes garder plusieurs options ouvertes le plus longtemps possible."],
+  ["Une règle claire te rassure.", "Une règle trop stricte te pèse vite."],
+  ["Tu préfères un métier avec des horaires et un cadre stables.", "Tu préfères un métier où chaque journée est différente."],
+  ["Tu te sens plus efficace avec des listes et des méthodes.", "Tu te sens plus efficace en improvisant selon la situation."],
+  ["Changer un plan au dernier moment te dérange.", "Changer un plan au dernier moment ne te dérange pas, voire ça t'excite."],
+  ["Tu préfères terminer une chose avant de commencer la suivante.", "Tu aimes avoir plusieurs projets en cours en même temps."],
+  ["Tu prépares longtemps à l'avance un exposé ou un examen.", "Tu prépares au fur et à mesure, quitte à finir juste à temps."],
+  ["Tu apprécies les structures qui donnent un cadre net à suivre.", "Tu apprécies la liberté de faire les choses à ta façon."],
+  ["Une journée bien remplie, pour toi, suit un programme précis.", "Une journée réussie, pour toi, peut partir dans une direction imprévue."],
+  ["Tu te sens stressé quand un projet manque de structure.", "Tu restes plutôt à l'aise même quand un projet manque de structure."],
+  ["Tu préfères un cadre professionnel avec des procédures claires.", "Tu préfères un cadre professionnel souple, qui laisse la place à l'initiative."]
+];
+
+var Q_S_D = [
+  ["Tu préfères travailler seul sur un projet important.", "Tu préfères travailler en équipe sur un projet important."],
+  ["Après une journée intense, tu te ressources seul, au calme.", "Après une journée intense, tu te ressources en voyant du monde."],
+  ["Tu réfléchis mieux quand tu es seul avec tes idées.", "Tu réfléchis mieux en discutant à voix haute avec d'autres."],
+  ["Un métier plutôt solitaire ne te ferait pas peur, au contraire.", "Un métier trop solitaire te pèserait vite."],
+  ["Tu préfères prendre les décisions toi-même, sans trop de discussion.", "Tu préfères décider en groupe, après en avoir discuté."],
+  ["En classe, tu préfères les exercices individuels.", "En classe, tu préfères les travaux de groupe."],
+  ["Tu te sens à l'aise dans le silence et la concentration seule.", "Tu te sens à l'aise dans le bruit et l'énergie d'un groupe."],
+  ["Tu avances plus vite quand tu es autonome.", "Tu avances plus vite quand tu es porté par une équipe."],
+  ["Une soirée idéale, pour toi, est calme et avec peu de monde.", "Une soirée idéale, pour toi, réunit beaucoup de monde."],
+  ["Tu préfères un métier où tu gères ton temps et ton espace seul.", "Tu préfères un métier où tu es constamment entouré de collègues."],
+  ["Tu te sens parfois épuisé après trop d'interactions sociales.", "Tu te sens parfois épuisé quand tu restes trop longtemps seul."],
+  ["Tu préfères présenter un travail que tu as fait seul.", "Tu préfères présenter un travail construit avec d'autres."],
+  ["Face à un défi, ta première envie est de t'isoler pour y réfléchir.", "Face à un défi, ta première envie est d'en parler avec d'autres."],
+  ["Tu apprécies un métier discret, sans forcément beaucoup de monde autour.", "Tu apprécies un métier social, tourné vers les échanges constants."],
+  ["Tu te définis plutôt comme quelqu'un d'indépendant.", "Tu te définis plutôt comme quelqu'un de sociable et collectif."]
+];
+
+var RAW_BLOCKS = [Q_T_V, Q_C_R, Q_O_A, Q_S_D];
+
+// interleave the four blocks so the test doesn't feel grouped by theme.
+// Each item keeps only the statement phrased for the axis's left-hand letter
+// (Terrain / Cœur / Organisé / Solo) ; the response scale below covers agreement
+// or disagreement with it, which naturally covers the opposite letter too.
+var QUESTIONS = [];
+for (var i = 0; i < 15; i++) {
+  for (var ax = 0; ax < 4; ax++) {
+    var pair = RAW_BLOCKS[ax][i];
+    QUESTIONS.push({ axis: ax, text: pair[0] });
+  }
+}
+
+var LIKERT_OPTIONS = [
+  { label: "Complètement vrai", score: 2 },
+  { label: "Plutôt vrai", score: 1 },
+  { label: "Je ne sais pas", score: 0 },
+  { label: "Plutôt faux", score: -1 },
+  { label: "Complètement faux", score: -2 }
+];
+
+// Each axis has 15 items scored from -2 to +2, so the raw sum per axis
+// ranges from -30 to +30. We rescale the absolute value onto a 1-50 scale
+// (a perfect 0-0 tie is defined not to occur : it defaults to a minimal
+// lean of 1 on the left-hand letter, so the result always names a direction).
+function computeAxisResult(axisIndex) {
+  var raw = state.rawSums[axisIndex];
+  var scaled = Math.round((Math.abs(raw) * 50) / 30);
+  if (scaled < 1) { scaled = 1; }
+  if (scaled > 50) { scaled = 50; }
+  var axis = AXES[axisIndex];
+  var side = raw >= 0 ? "left" : "right";
+  var winning = side === "left" ? axis.left : axis.right;
+  var band = scaled <= 10 ? "tendance faible" : (scaled <= 25 ? "tendance moyenne" : "tendance forte");
+  return { axis: axis, side: side, value: scaled, band: band, letter: winning.letter, label: winning.label };
+}
+
+// ---------- 16 TYPES ----------
+
+var TYPES = {};
+
+function addType(code, name, baseline, portrait, forces, vigilance, environnement, etudes, metiers, conseil) {
+  TYPES[code] = {
+    name: name, baseline: baseline, portrait: portrait, forces: forces,
+    vigilance: vigilance, environnement: environnement, etudes: etudes,
+    metiers: metiers, conseil: conseil
+  };
+}
+
+addType("TCOS", "L'Artisan du Soin",
+  "Tu construis avec tes mains et ton attention.",
+  "Tu avances au contact direct des choses et des gens, avec une méthode que tu ne lâches pas facilement. Tu n'as pas besoin de grands discours pour te sentir utile : un geste bien fait, une personne bien accompagnée, ça te suffit. Tu préfères souvent gérer les choses à ton rythme plutôt qu'en pleine agitation collective.",
+  ["Tu es fiable : ce que tu commences, tu le finis proprement.", "Tu sais rassurer les gens par ta présence calme et concrète.", "Tu apprends vite par la pratique répétée, sans t'épuiser à théoriser.", "Tu gardes ton sang-froid dans les situations qui demandent du soin et de la précision."],
+  ["Tu peux t'enfermer dans ta méthode et avoir du mal à improviser.", "Tu hésites parfois à demander de l'aide, même quand ce serait plus rapide.", "Un cadre trop flou ou trop bruyant peut vite te fatiguer."],
+  "Tu t'épanouis dans un environnement calme, structuré, où tu as la responsabilité d'un geste ou d'un suivi précis, sans être noyé dans un open space permanent.",
+  ["Bac pro ou BTS dans le secteur sanitaire, social ou technique", "IFSI (infirmier), formation aide-soignant ou auxiliaire de puériculture", "BTS Podologie, Diététique, ou Esthétique-Cosmétique", "CAP ou Bac pro dans l'artisanat de précision (ébénisterie, prothèses dentaires)", "Formations aux métiers du soin animalier ou paramédical"],
+  ["Infirmier ou infirmière", "Kinésithérapeute", "Auxiliaire de puériculture", "Technicien de laboratoire médical", "Artisan spécialisé (prothésiste, orthopédiste)", "Éducateur canin ou soigneur animalier"],
+  "Ne cherche pas un métier bruyant pour prouver que tu es capable de plus. Ta force, c'est la constance : construis une compétence rare plutôt qu'une carrière tape-à-l'œil.");
+
+addType("TCOD", "Le Coordinateur de Terrain",
+  "Tu fais avancer les autres avec méthode et cœur.",
+  "Tu aimes que les choses soient claires pour tout le monde, et tu prends plaisir à faire avancer un groupe vers un objectif concret. Ta rigueur ne t'empêche pas d'être proche des gens : tu es souvent celui ou celle qui organise sans écraser personne. Tu préfères l'action collective bien cadrée à la réflexion solitaire.",
+  ["Tu sais structurer le travail d'un groupe sans en perdre l'humain.", "Tu es rassurant dans les moments de tension parce que tu gardes le cap.", "Tu passes facilement de la théorie à l'action.", "On peut compter sur toi pour tenir les délais d'une équipe."],
+  ["Tu peux devenir rigide quand quelqu'un sort du cadre que tu as fixé.", "Tu as parfois du mal à déléguer, par peur que ce ne soit pas fait comme il faut.", "Tu t'épuises si tu dois gérer trop d'imprévus en même temps."],
+  "Tu t'épanouis dans un rôle d'encadrement de terrain, avec une équipe stable et des objectifs clairs à atteindre ensemble.",
+  ["BUT Carrières sociales ou Gestion administrative", "Formation aux métiers de l'enseignement (professeur des écoles, CAPES)", "BTS Management ou Gestion d'unité commerciale", "Formations aux métiers de l'animation socio-éducative (BPJEPS)", "Écoles de commerce ou de gestion orientées management d'équipe"],
+  ["Professeur des écoles", "Coordinateur d'équipe éducative", "Responsable de restauration ou d'hôtellerie", "Chef d'équipe en logistique ou production", "Responsable associatif de terrain", "Chef de projet social"],
+  "Fais confiance à ton équipe plus vite que tu ne le fais naturellement. Ton cadre est solide, il peut supporter un peu de liberté sans s'effondrer.");
+
+addType("TCAS", "L'Accompagnateur Libre",
+  "Tu avances à ton rythme, au service des autres.",
+  "Tu es concret, humain, mais tu détestes les cases trop rigides. Tu préfères adapter ta façon de faire à chaque personne ou chaque situation plutôt que suivre un protocole figé. Tu fonctionnes mieux quand tu es maître de ton emploi du temps et de ta manière de faire les choses.",
+  ["Tu t'adaptes vite à des personnes ou des situations très différentes.", "Tu es à l'aise pour créer un lien de confiance rapide.", "Tu trouves des solutions pratiques même quand rien n'est prévu à l'avance.", "Tu tiens naturellement compte de l'humain avant la procédure."],
+  ["Tu peux manquer de suivi dans la durée si rien ne t'y oblige.", "Un cadre trop administratif ou trop hiérarchique t'étouffe vite.", "Tu peux te disperser si tu n'as personne pour te recentrer."],
+  "Tu t'épanouis en indépendant ou en petite structure souple, avec une vraie liberté d'organisation et un contact direct avec les personnes que tu accompagnes.",
+  ["BPJEPS ou formations aux métiers du sport individuel (coach sportif)", "Formations aux métiers du bien-être (massage, sophrologie)", "CAP ou Bac pro dans l'artisanat créatif et solidaire", "Formations d'aide à la personne en libéral ou indépendant", "BTS Esthétique-Cosmétique en vue d'une installation à son compte"],
+  ["Coach sportif indépendant", "Praticien bien-être (massage, sophrologie)", "Éducateur spécialisé en libéral", "Artisan créateur installé à son compte", "Aide à domicile en autonomie", "Guide ou accompagnateur nature"],
+  "Donne-toi un minimum de structure, même légère : un simple carnet de suivi peut t'éviter de perdre le fil de ce que tu construis sur la durée.");
+
+addType("TCAD", "L'Animateur de Terrain",
+  "Tu donnes de l'énergie partout où tu passes.",
+  "Tu es à l'aise dans l'action, entouré de monde, et tu détestes la routine figée. Tu fonctionnes à l'énergie du moment, tu rebondis vite, et tu sais entraîner un groupe même quand rien n'était prévu. L'ambiance humaine compte souvent plus pour toi que le plan initial.",
+  ["Tu mobilises facilement un groupe autour d'une activité.", "Tu t'adaptes très vite aux imprévus, sans perdre ton énergie.", "Tu crées du lien rapidement avec des personnes très différentes.", "Tu gardes une bonne humeur qui rassure les autres dans le mouvement."],
+  ["Tu peux manquer de suivi administratif ou de rigueur sur la durée.", "Tu t'ennuies vite dans un cadre trop répétitif ou trop encadré.", "Tu as parfois du mal à dire non, par envie de faire plaisir à tout le monde."],
+  "Tu t'épanouis sur le terrain, en équipe, dans des missions qui changent souvent et qui mettent l'humain au centre.",
+  ["BPJEPS Animation ou Loisirs tous publics", "Formations aux métiers de l'événementiel", "BTS Tourisme ou formations à l'animation touristique", "Formations aux métiers de l'humanitaire et de la solidarité internationale", "Diplômes d'État aux métiers du sport collectif"],
+  ["Animateur socioculturel ou sportif", "Chargé d'événementiel", "Éducateur sportif en club", "Animateur de séjours ou de colonies", "Chargé de projet humanitaire terrain", "Guide-animateur touristique"],
+  "Choisis une structure qui a besoin de ton énergie mais qui te donne un minimum de cadre. Sans lui, tu t'épuises plus vite que tu ne le crois.");
+
+addType("TROS", "Le Technicien de Précision",
+  "Tu fais les choses bien, sans en faire trop.",
+  "Tu es concret, logique, et tu aimes que ton travail soit propre et exact. Tu n'as pas besoin de bruit autour de toi pour être efficace : au contraire, tu avances mieux seul, avec une méthode que tu maîtrises et que tu perfectionnes. La qualité du résultat compte plus pour toi que la reconnaissance qu'il t'apporte.",
+  ["Tu es rigoureux et précis, même sur des tâches complexes.", "Tu résous les problèmes techniques avec méthode plutôt qu'au hasard.", "Tu travailles bien en autonomie, sans besoin d'être encadré en permanence.", "Tu es fiable sur des tâches qui demandent de la constance."],
+  ["Tu peux être trop exigeant envers toi-même sur les détails.", "Tu communiques parfois peu sur ce que tu fais, ce qui peut t'isoler.", "Un environnement désorganisé ou changeant en permanence te déstabilise."],
+  "Tu t'épanouis dans un poste technique précis, avec un vrai espace d'autonomie et des standards de qualité clairs à respecter.",
+  ["BTS ou BUT dans un domaine technique (électronique, mécanique, industrialisation)", "Bac pro technique suivi d'une spécialisation", "Formations aux métiers de laboratoire ou de maintenance de précision", "CAP ou Bac pro dans l'horlogerie, l'optique ou la mécanique de précision", "DUT/BUT Génie mécanique ou Génie électrique"],
+  ["Technicien de maintenance industrielle", "Technicien de laboratoire", "Mécanicien de précision (horlogerie, aéronautique)", "Électricien ou électrotechnicien spécialisé", "Contrôleur qualité", "Technicien en optique ou en instrumentation"],
+  "N'aie pas peur de montrer ton travail plus souvent. Ta rigueur parle d'elle-même, mais elle a besoin d'être vue pour être reconnue.");
+
+addType("TROD", "Le Pilote d'Exécution",
+  "Tu fais avancer une équipe vers un objectif net.",
+  "Tu es concret et méthodique, et tu aimes que les choses avancent selon un plan clair, avec une équipe qui sait exactement où elle va. Tu es rassurant dans l'action parce que tu gardes la tête froide, même sous pression. Tu préfères la logistique bien huilée à l'improvisation permanente.",
+  ["Tu organises efficacement le travail d'un groupe autour d'objectifs concrets.", "Tu gardes ton calme et ta clarté même sous pression.", "Tu anticipes les problèmes avant qu'ils n'arrivent.", "Tu es fiable sur le respect des délais et des procédures."],
+  ["Tu peux devenir cassant si l'équipe ne suit pas ton rythme.", "Tu tolères mal les décisions prises sans données ou sans logique claire.", "Tu peux négliger l'aspect humain au profit de l'efficacité pure."],
+  "Tu t'épanouis dans un rôle de coordination technique ou logistique, avec une équipe à piloter vers des objectifs mesurables.",
+  ["BUT Génie industriel et maintenance", "BTS Management des unités de production", "Écoles d'ingénieurs orientées production ou logistique", "Formations aux métiers du BTP (conducteur de travaux)", "Formations en logistique et transport (BTS, BUT)"],
+  ["Chef de chantier ou conducteur de travaux", "Responsable de production industrielle", "Responsable logistique", "Chef d'équipe technique", "Superviseur de maintenance", "Officier ou sous-officier technique"],
+  "Ta rigueur est un vrai moteur pour une équipe. Prends deux minutes de plus, régulièrement, pour demander comment vont les gens que tu diriges, pas seulement où ils en sont.");
+
+addType("TRAS", "Le Résolveur de Terrain",
+  "Tu répares, tu ajustes, tu avances seul.",
+  "Tu es à l'aise dans le concret, tu raisonnes avec logique, et tu détestes les cadres trop rigides. Ta force, c'est ta capacité à trouver une solution rapide face à un problème inattendu, sans attendre l'autorisation de qui que ce soit. Tu préfères souvent gérer les choses toi-même plutôt qu'en équipe.",
+  ["Tu résous vite des problèmes concrets et inattendus.", "Tu es autonome et tu n'as pas besoin d'être surveillé pour bien travailler.", "Tu raisonnes de façon claire même dans l'urgence.", "Tu apprends efficacement par l'essai direct."],
+  ["Tu peux avoir du mal à rendre compte de ton travail à quelqu'un d'autre.", "Un cadre trop administratif te fait fuir.", "Tu peux t'isoler dans un problème technique au point d'oublier le reste."],
+  "Tu t'épanouis en indépendant ou en poste très autonome, sur des missions techniques variées où chaque jour apporte un nouveau problème à résoudre.",
+  ["Bac pro ou BTS Maintenance des systèmes (auto, industriels, énergétiques)", "Formations d'électricien, plombier ou technicien polyvalent", "Formations au permis professionnel (transport, conduite d'engins)", "Formations d'entrepreneur technique (auto-entrepreneuriat, artisanat)", "BTS Systèmes numériques"],
+  ["Technicien de maintenance polyvalent", "Artisan freelance (électricité, plomberie, mécanique)", "Conducteur professionnel (routier, engins)", "Dépanneur ou réparateur indépendant", "Technicien informatique itinérant", "Entrepreneur individuel dans un métier technique"],
+  "Ton indépendance est une force, mais un minimum de suivi administratif t'évitera de perdre du temps ou de l'argent sur la durée. Ce n'est pas ta partie préférée, fais-toi aider sur ce point si besoin.");
+
+addType("TRAD", "L'Intervenant Réactif",
+  "Tu es efficace quand tout bouge autour de toi.",
+  "Tu es concret, logique, et tu donnes le meilleur de toi-même quand la situation demande une réaction rapide et coordonnée avec d'autres. L'urgence ne te fait pas peur, elle te stimule. Tu préfères l'action collective en mouvement à la routine tranquille.",
+  ["Tu gardes ton sang-froid et ta clarté dans les situations tendues.", "Tu t'adaptes vite à des situations qui changent en permanence.", "Tu coordonnes bien ton action avec celle d'une équipe, même sous pression.", "Tu prends des décisions rapides et logiques quand il le faut."],
+  ["Tu peux t'ennuyer, voire décrocher, dans un poste trop calme ou trop répétitif.", "Tu peux négliger la paperasse ou le suivi une fois l'urgence passée.", "Tu as parfois besoin d'adrénaline pour rester motivé, ce qui peut t'épuiser à la longue."],
+  "Tu t'épanouis dans des métiers d'intervention en équipe, où chaque journée apporte une situation différente à gérer avec efficacité.",
+  ["Formations aux métiers de la sécurité civile (pompier, secouriste)", "Concours des métiers de la sécurité (police, gendarmerie)", "BTS ou formations en logistique d'urgence et gestion de crise", "Formations médicales d'urgence (ambulancier, technicien de SAMU)", "Formations militaires techniques"],
+  ["Sapeur-pompier", "Ambulancier ou technicien d'urgence", "Agent de sécurité civile ou militaire", "Technicien d'intervention rapide (réseaux, énergie)", "Agent de maintenance mobile en équipe", "Coordinateur logistique d'urgence"],
+  "Cherche des métiers qui te donnent de l'action régulière, sinon tu risques de t'ennuyer vite ailleurs. Mais prévois aussi des moments calmes pour ne pas t'épuiser sur la durée.");
+
+addType("VCOS", "Le Penseur Humain",
+  "Tu comprends les gens en profondeur, à ton rythme.",
+  "Tu es tourné vers les idées et les personnes à la fois. Tu aimes comprendre en profondeur ce qui fait fonctionner quelqu'un ou une situation, et tu préfères souvent le faire seul, avec le temps qu'il faut, plutôt qu'en réunion de groupe. Ta réflexion est un outil au service des autres.",
+  ["Tu analyses les situations humaines avec finesse et patience.", "Tu es capable d'une grande concentration sur des sujets complexes.", "Tu es un bon confident, à l'écoute sans jugement.", "Tu formules des idées claires sur des sujets sensibles."],
+  ["Tu peux trop intellectualiser des situations qui demandent juste de l'action.", "Tu hésites parfois à te lancer sans avoir toutes les réponses.", "Un cadre trop bruyant ou trop social en continu peut t'épuiser vite."],
+  "Tu t'épanouis dans une activité qui te laisse du temps de réflexion individuelle, au service de la compréhension humaine.",
+  ["Licence puis Master de Psychologie", "Licence de Sciences de l'éducation", "Formations aux métiers du conseil en orientation", "Licence de Sociologie ou d'Anthropologie", "Formations aux métiers de la rédaction spécialisée (santé, société)"],
+  ["Psychologue", "Conseiller d'orientation", "Chercheur en sciences humaines", "Rédacteur ou journaliste spécialisé", "Psychopraticien ou thérapeute", "Consultant indépendant en ressources humaines"],
+  "Ta réflexion a de la valeur, mais elle doit un jour rencontrer le monde réel. Choisis un cursus qui inclut du terrain, même si ta préférence naturelle est la théorie.");
+
+addType("VCOD", "Le Formateur",
+  "Tu transmets avec méthode et bienveillance.",
+  "Tu aimes faire grandir les autres, et tu le fais avec structure : un cours bien préparé, une progression claire, un cadre rassurant. Tu es à l'aise devant un groupe parce que tu sais où tu veux les amener. L'humain et la pédagogie sont au centre de ce qui te motive.",
+  ["Tu structures bien la transmission d'un savoir ou d'une compétence.", "Tu es patient et pédagogue face aux difficultés des autres.", "Tu inspires confiance dans un cadre institutionnel.", "Tu combines rigueur et bienveillance naturellement."],
+  ["Tu peux t'accrocher trop longtemps à une méthode qui ne fonctionne plus pour un groupe donné.", "Tu peux avoir du mal à improviser quand le cours ou le plan est bousculé.", "Tu te fatigues si tu manques de reconnaissance sur la durée."],
+  "Tu t'épanouis dans un cadre éducatif ou institutionnel stable, avec un groupe régulier à accompagner dans la durée.",
+  ["Licence puis Master MEEF (métiers de l'enseignement)", "Licence de Sciences de l'éducation", "Formations aux métiers des ressources humaines (formation, développement RH)", "Diplômes de travailleur social (assistant de service social, éducateur spécialisé)", "Formations de formateur professionnel d'adultes"],
+  ["Professeur ou enseignant", "Formateur professionnel", "Chargé de formation en entreprise", "Conseiller en insertion professionnelle", "Travailleur social en institution", "Responsable pédagogique"],
+  "Ton cadre est une force, mais reste attentif à chaque élève ou personne comme un cas particulier, pas seulement comme une étape de ton programme.");
+
+addType("VCAS", "Le Créateur Sensible",
+  "Tu exprimes ce que tu ressens à ta façon.",
+  "Tu es guidé par les idées et l'émotion, et tu détestes qu'on t'impose une façon unique de faire. Tu préfères créer, écrire, imaginer, à ton propre rythme, en explorant ce qui te touche vraiment. Le collectif t'inspire parfois, mais c'est souvent seul que tu donnes le meilleur de toi-même.",
+  ["Tu as une vraie sensibilité créative et personnelle.", "Tu explores des idées et des émotions avec profondeur.", "Tu t'adaptes facilement à de nouvelles formes d'expression.", "Tu es capable de travailler longtemps sur un projet qui te tient à cœur."],
+  ["Tu peux manquer de structure pour terminer et diffuser ce que tu crées.", "Tu peux te sentir incompris dans un cadre trop rigide ou trop commercial.", "Tu doutes parfois beaucoup de la valeur de ce que tu fais."],
+  "Tu t'épanouis dans une activité créative libre, avec la possibilité de t'exprimer à ta manière et de gérer ton temps toi-même.",
+  ["Licence Arts, Lettres, Langues ou Arts appliqués", "Écoles d'art, d'écriture ou de cinéma", "Formations aux métiers de la création de contenu numérique", "Formations en thérapies créatives (art-thérapie, musicothérapie)", "Diplômes des métiers d'art (illustration, design)"],
+  ["Écrivain ou scénariste", "Illustrateur ou designer indépendant", "Créateur de contenu (vidéo, écrit, audio)", "Art-thérapeute", "Musicien ou artiste indépendant", "Photographe ou réalisateur"],
+  "Donne-toi une contrainte simple, une deadline, un format, pour que ta créativité rencontre un public. Sans cela, beaucoup de tes idées resteront seulement dans ta tête.");
+
+addType("VCAD", "Le Médiateur",
+  "Tu relies les gens autour d'une idée commune.",
+  "Tu es à l'aise avec les idées et les personnes, et tu fonctionnes bien dans le mouvement plutôt que dans un cadre figé. Tu aimes fédérer un groupe autour d'un projet qui a du sens, en t'adaptant à chacun. Le collectif te nourrit, tant qu'il reste porteur de sens.",
+  ["Tu fédères facilement un groupe autour d'un projet qui a du sens.", "Tu t'adaptes vite aux personnes et aux situations différentes.", "Tu sais désamorcer les tensions dans un groupe.", "Tu portes des idées avec conviction sans être rigide."],
+  ["Tu peux te disperser entre trop de projets à la fois.", "Tu peux manquer de suivi administratif sur la durée.", "Tu t'épuises dans des environnements trop procéduriers ou trop cloisonnés."],
+  "Tu t'épanouis dans des projets collectifs à impact humain ou social, où tu peux à la fois porter une vision et l'adapter au terrain.",
+  ["Licence de Sciences politiques ou Sciences sociales", "Formations aux métiers de la médiation culturelle", "Master en gestion de projets associatifs ou humanitaires", "Formations aux métiers de la communication engagée", "Écoles ou diplômes en économie sociale et solidaire"],
+  ["Chargé de projet associatif ou humanitaire", "Médiateur culturel ou social", "Chargé de communication engagée", "Chef de projet en économie sociale et solidaire", "Responsable d'événements à impact social", "Consultant en dialogue social"],
+  "Choisis un ou deux projets à la fois, pas dix. Ta capacité à fédérer est précieuse, ne la disperse pas sur trop de fronts en même temps.");
+
+addType("VROS", "Le Stratège Analytique",
+  "Tu résous des problèmes complexes, en profondeur.",
+  "Tu es logique, tourné vers les idées, et tu aimes creuser un sujet jusqu'au bout, souvent seul, avec méthode. Tu es à l'aise avec la complexité et tu ne te contentes pas d'une réponse superficielle. La rigueur intellectuelle est pour toi une valeur presque naturelle.",
+  ["Tu analyses les problèmes complexes avec beaucoup de rigueur.", "Tu es capable d'une concentration longue et profonde sur un sujet.", "Tu es autonome dans ta façon de chercher des solutions.", "Tu structures ta pensée de façon claire et méthodique."],
+  ["Tu peux avoir du mal à simplifier tes idées pour les autres.", "Tu peux négliger l'aspect humain d'un projet au profit de sa logique.", "Un cadre trop social ou trop instable te fatigue vite."],
+  "Tu t'épanouis dans un poste d'expertise technique ou scientifique, avec un vrai temps de recherche et d'analyse en autonomie.",
+  ["Licence de Mathématiques, Physique ou Informatique", "Écoles d'ingénieurs (généralistes ou spécialisées)", "Classes préparatoires scientifiques", "Master ou Doctorat en sciences (recherche)", "Formations en data science ou intelligence artificielle"],
+  ["Data scientist", "Développeur ou ingénieur logiciel", "Chercheur scientifique", "Ingénieur en recherche et développement", "Analyste financier ou statisticien", "Expert technique en cybersécurité"],
+  "Ton expertise sera d'autant plus utile si tu apprends à l'expliquer simplement. Entraîne-toi à résumer tes idées en une phrase pour quelqu'un qui n'y connaît rien.");
+
+addType("VROD", "Le Chef d'Orchestre",
+  "Tu structures des projets complexes en équipe.",
+  "Tu es logique, méthodique, et tu aimes piloter des projets ambitieux avec une équipe autour de toi. Tu vois la vue d'ensemble d'un problème et tu sais organiser le travail des autres pour y répondre efficacement. La cohérence et la clarté sont au cœur de ta façon de fonctionner.",
+  ["Tu structures des projets complexes avec méthode et clarté.", "Tu coordonnes efficacement le travail de plusieurs personnes.", "Tu anticipes les risques et les problèmes avant qu'ils n'arrivent.", "Tu combines vision d'ensemble et rigueur d'exécution."],
+  ["Tu peux devenir trop directif si l'équipe ne suit pas ta logique.", "Tu tolères mal l'improvisation totale ou l'absence de plan.", "Tu peux négliger le ressenti des autres au profit de l'efficacité du projet."],
+  "Tu t'épanouis dans un poste de pilotage de projets techniques ou stratégiques, avec une équipe à coordonner sur la durée.",
+  ["Écoles d'ingénieurs généralistes", "Écoles de commerce avec spécialisation gestion de projet", "Licence puis Master en gestion de projet ou management", "Formations d'architecte (bâtiment ou informatique)", "Master en administration des entreprises"],
+  ["Chef de projet technique", "Consultant en organisation ou en stratégie", "Architecte (bâtiment, systèmes, logiciel)", "Directeur de programme", "Ingénieur en gestion de production", "Manager en organisation industrielle"],
+  "Ta capacité à structurer est précieuse. Utilise-la aussi pour structurer l'écoute de ton équipe, pas seulement les tâches à accomplir.");
+
+addType("VRAS", "L'Innovateur Libre",
+  "Tu inventes des solutions que personne n'attend.",
+  "Tu es logique, tourné vers les idées, et tu détestes qu'on t'enferme dans un cadre. Tu préfères explorer, tester, inventer, à ton rythme et souvent seul. Ta pensée avance par bonds plutôt que par étapes bien rangées, et c'est exactement ce qui te rend créatif dans la résolution de problèmes.",
+  ["Tu trouves des solutions originales à des problèmes complexes.", "Tu es autonome et tu n'as pas besoin d'un cadre strict pour avancer.", "Tu apprends vite en explorant par toi-même.", "Tu raisonnes de façon logique tout en restant créatif."],
+  ["Tu peux abandonner un projet dès qu'il devient répétitif.", "Tu peux avoir du mal à respecter des procédures ou des délais imposés.", "Tu peux te disperser entre plusieurs idées à la fois."],
+  "Tu t'épanouis en indépendant ou en petite structure agile, sur des projets techniques ou scientifiques qui laissent de la place à l'expérimentation.",
+  ["Écoles d'ingénieurs orientées innovation ou recherche appliquée", "Formations en entrepreneuriat et création de startup", "Licence puis Master en informatique ou sciences appliquées", "Formations en design de produits ou UX", "Diplômes en recherche scientifique indépendante"],
+  ["Développeur freelance", "Entrepreneur ou créateur de startup", "Chercheur en innovation", "Designer de produits", "Inventeur ou consultant en R&D", "Ingénieur en recherche appliquée indépendant"],
+  "Choisis-toi un cadre minimal, même léger, pour donner une forme concrète à tes idées. Sans lui, beaucoup resteront à l'état de projet inachevé.");
+
+addType("VRAD", "Le Visionnaire Collectif",
+  "Tu emmènes un groupe vers ce qui n'existe pas encore.",
+  "Tu es logique, tourné vers les idées, et tu aimes que les choses bougent vite, en équipe. Tu vois loin, tu sens les tendances avant les autres, et tu sais entraîner un collectif vers un projet ambitieux, même s'il reste à inventer en cours de route. Le cadre fixe t'ennuie, l'aventure collective te stimule.",
+  ["Tu perçois vite les opportunités et les tendances émergentes.", "Tu fédères une équipe autour d'une vision ambitieuse.", "Tu t'adaptes rapidement quand un projet change de direction.", "Tu combines esprit stratégique et énergie collective."],
+  ["Tu peux t'enflammer pour une idée sans toujours vérifier sa solidité.", "Tu peux manquer de suivi sur les détails d'exécution.", "Tu t'ennuies vite dans un cadre trop stable ou trop répétitif."],
+  "Tu t'épanouis dans des environnements en mouvement rapide, comme les startups ou les projets d'innovation collective, où tu peux porter une vision avec d'autres.",
+  ["Écoles de commerce ou d'ingénieurs orientées innovation", "Formations en entrepreneuriat collectif", "Master en stratégie ou management de l'innovation", "Formations en gestion de produit (product management)", "Sciences politiques avec spécialisation en prospective"],
+  ["Chef de produit (product manager)", "Consultant en innovation ou en stratégie", "Cofondateur de startup", "Directeur de l'innovation", "Chargé de prospective ou de veille stratégique", "Chef de projet en transformation d'entreprise"],
+  "Entoure-toi de quelqu'un de plus méthodique que toi pour transformer tes idées en projets vraiment aboutis. C'est un complément, pas un frein.");
+
+// ---------- STATE ----------
+
+var state = {
+  screen: "gate",
+  index: 0,
+  answers: [],
+  rawSums: [0, 0, 0, 0],
+  gateError: "",
+  gateLoading: false,
+  gateRemaining: null
+};
+
+function compassSVG() {
+  return '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">' +
+    '<circle cx="24" cy="24" r="17" stroke="#FFBD59" stroke-width="2"/>' +
+    '<path d="M24 10 L28 24 L24 38 L20 24 Z" fill="#FFBD59"/>' +
+    '<circle cx="24" cy="24" r="2.4" fill="#0D1B3E" stroke="#FFBD59" stroke-width="1"/>' +
+    '</svg>';
+}
+
+function render() {
+  var el = document.getElementById("app");
+  if (state.screen === "gate") { el.innerHTML = renderGate(); bind(); return; }
+  if (state.screen === "intro") { el.innerHTML = renderIntro(); bind(); return; }
+  if (state.screen === "quiz") { el.innerHTML = renderQuiz(); bind(); return; }
+  if (state.screen === "result") { el.innerHTML = renderResult(); bind(); return; }
+}
+
+function renderGate() {
+  var html = "";
+  html += '<div class="brand">';
+  html += '<div class="mark">' + compassSVG() + '</div>';
+  html += '<p class="word">A4P MENTAL</p>';
+  html += '<h1>Ta Boussole d\'orientation</h1>';
+  html += '<p class="tag">Trouve ton Code CAP</p>';
+  html += '</div>';
+  html += '<div class="card">';
+
+  if (!supabaseClient) {
+    html += '<p class="lead">La vérification des codes d\'accès n\'est pas encore activée sur cette installation (configuration Supabase à compléter dans le fichier).</p>';
+    html += '<p class="lead">En attendant, tu peux tester librement l\'outil : aucun passage ne sera compté tant que ce n\'est pas activé.</p>';
+    html += '<button class="btn-primary" id="test-mode-btn">Continuer en mode test</button>';
+    html += '</div>';
+    html += disclaimer();
+    return html;
+  }
+
+  html += '<p class="lead">Cet outil est réservé aux personnes ayant reçu un code d\'accès de leur coach A4P Mental.</p>';
+  html += '<span class="gate-label">Code d\'accès</span>';
+  html += '<input class="gate-input" id="gate-code" type="text" placeholder="EX. AB12CD" maxlength="20" autocomplete="off" ' + (state.gateLoading ? 'disabled' : '') + '>';
+  if (state.gateError) {
+    html += '<p class="gate-error">' + state.gateError + '</p>';
+  }
+  html += '<button class="btn-primary" id="gate-btn" ' + (state.gateLoading ? 'disabled' : '') + '>';
+  html += state.gateLoading ? '<span class="spinner"></span>Vérification...' : 'Valider mon code';
+  html += '</button>';
+  html += '</div>';
+  html += disclaimer();
+  return html;
+}
+
+function submitGateCode() {
+  var input = document.getElementById("gate-code");
+  var code = (input.value || "").trim().toUpperCase();
+
+  if (!code) {
+    state.gateError = "Merci de saisir ton code d'accès.";
+    render();
+    return;
+  }
+
+  if (!supabaseClient) {
+    state.gateError = "La configuration d'accès n'est pas encore activée. Contacte ton coach.";
+    render();
+    return;
+  }
+
+  state.gateLoading = true;
+  state.gateError = "";
+  render();
+
+  supabaseClient.rpc("cap_consume_attempt", { p_code: code }).then(function (response) {
+    state.gateLoading = false;
+    var data = response.data;
+    var error = response.error;
+
+    if (error || !data || !data[0]) {
+      state.gateError = "Une erreur est survenue, réessaie dans un instant.";
+      render();
+      return;
+    }
+
+    var result = data[0];
+    if (!result.success) {
+      state.gateError = result.message || "Code invalide.";
+      render();
+      return;
+    }
+
+    state.gateRemaining = result.remaining;
+    state.screen = "intro";
+    render();
+    window.scrollTo(0, 0);
+  }).catch(function () {
+    state.gateLoading = false;
+    state.gateError = "Impossible de vérifier le code pour le moment.";
+    render();
+  });
+}
+
+function renderIntro() {
+  var html = "";
+  html += '<div class="brand">';
+  html += '<div class="mark">' + compassSVG() + '</div>';
+  html += '<p class="word">A4P MENTAL</p>';
+  html += '<h1>Ta Boussole d\'orientation</h1>';
+  html += '<p class="tag">Trouve ton Code CAP</p>';
+  html += '</div>';
+  html += '<div class="card">';
+  html += '<p class="lead">60 questions, un peu comme un test de personnalité classique, mais construites pour t\'aider à voir <strong>vers quelles études et quels métiers tu es naturellement porté</strong>.</p>';
+  html += '<p class="lead">Réponds spontanément, sans trop réfléchir : il n\'y a pas de bonne ou de mauvaise réponse, seulement la tienne.</p>';
+  if (state.gateRemaining !== null && state.gateRemaining !== undefined) {
+    html += '<p class="gate-label" style="margin-bottom:10px;">Passages restants avec ce code : ' + state.gateRemaining + '</p>';
+  }
+  html += '<div class="meta-line">';
+  html += '<div class="meta-item"><div class="num">60</div><div class="lbl">questions</div></div>';
+  html += '<div class="meta-item"><div class="num">4</div><div class="lbl">dimensions</div></div>';
+  html += '<div class="meta-item"><div class="num">~8</div><div class="lbl">minutes</div></div>';
+  html += '</div>';
+  html += '<div class="axis-legend">';
+  html += axisChip("T", "Terrain") + axisChip("V", "Vision");
+  html += axisChip("C", "Cœur") + axisChip("R", "Raison");
+  html += '</div>';
+  html += '<div class="axis-legend">';
+  html += axisChip("O", "Organisé") + axisChip("A", "Adaptable");
+  html += axisChip("S", "Solo") + axisChip("D", "Duo");
+  html += '</div>';
+  html += '<button class="btn-primary" id="start-btn">Commencer le test</button>';
+  html += '</div>';
+  html += disclaimer();
+  return html;
+}
+
+function axisChip(letter, label) {
+  return '<div class="axis-chip"><span class="l">' + letter + '</span><span class="s">' + label + '</span></div>';
+}
+
+function renderQuiz() {
+  var q = QUESTIONS[state.index];
+  var pct = Math.round((state.index / QUESTIONS.length) * 100);
+  var html = "";
+  html += '<div class="card">';
+  html += '<div class="progress-wrap">';
+  html += '<div class="progress-top"><span>Question ' + (state.index + 1) + ' / ' + QUESTIONS.length + '</span><span>' + pct + '%</span></div>';
+  html += '<div class="progress-track"><div class="progress-fill" style="width:' + pct + '%"></div></div>';
+  html += '</div>';
+  html += '<p class="question-text">' + q.text + '</p>';
+  for (var i = 0; i < LIKERT_OPTIONS.length; i++) {
+    html += '<button class="choice" data-score="' + LIKERT_OPTIONS[i].score + '"><span class="k">' + (i + 1) + '</span>' + LIKERT_OPTIONS[i].label + '</button>';
+  }
+  if (state.index > 0) {
+    html += '<button class="back-link" id="back-btn">← Question précédente</button>';
+  }
+  html += '</div>';
+  return html;
+}
+
+function renderResult() {
+  var code = "";
+  var axisResults = [];
+  for (var i = 0; i < 4; i++) {
+    var r = computeAxisResult(i);
+    axisResults.push(r);
+    code += r.letter;
+  }
+  var t = TYPES[code];
+  var html = "";
+  html += '<div class="brand" style="padding-bottom:22px;">';
+  html += '<div class="mark">' + compassSVG() + '</div>';
+  html += '<p class="word">TON CODE CAP</p>';
+  html += '<div class="code-row">';
+  for (var c = 0; c < code.length; c++) {
+    html += '<div class="code-tile">' + code[c] + '</div>';
+  }
+  html += '</div>';
+  html += '</div>';
+  html += '<div class="card">';
+  html += '<p class="type-name">' + t.name + '</p>';
+  html += '<p class="type-baseline">' + t.baseline + '</p>';
+  html += '<div class="axis-bars">';
+  for (var j = 0; j < 4; j++) {
+    html += renderAxisBarRow(axisResults[j]);
+  }
+  html += '</div>';
+
+  html += '<p class="section-title">Ton portrait</p>';
+  html += '<p class="report-p">' + t.portrait + '</p>';
+
+  html += '<p class="section-title">Tes forces</p>';
+  html += '<ul class="report-list">' + listItems(t.forces) + '</ul>';
+
+  html += '<p class="section-title">Tes points de vigilance</p>';
+  html += '<ul class="report-list">' + listItems(t.vigilance) + '</ul>';
+
+  html += '<p class="section-title">Où tu t\'épanouis</p>';
+  html += '<p class="report-p">' + t.environnement + '</p>';
+
+  html += '<p class="section-title">Pistes d\'études</p>';
+  html += '<ul class="report-list">' + listItems(t.etudes) + '</ul>';
+
+  html += '<p class="section-title">Pistes de métiers</p>';
+  html += '<ul class="report-list">' + listItems(t.metiers) + '</ul>';
+
+  html += '<div class="coach-box"><p class="who">Le conseil du coach</p><p>' + t.conseil + '</p></div>';
+
+  html += '<button class="btn-primary no-print" id="print-btn">Imprimer / enregistrer mon compte rendu</button>';
+  html += '<button class="btn-secondary no-print" id="restart-btn">Refaire le test</button>';
+  html += '</div>';
+  html += disclaimer();
+  return html;
+}
+
+function renderAxisBarRow(r) {
+  var leftFillPct = r.side === "left" ? Math.round((r.value / 50) * 100) : 0;
+  var rightFillPct = r.side === "right" ? Math.round((r.value / 50) * 100) : 0;
+  var leftText = r.side === "left" ? (r.axis.left.letter + " " + r.value) : r.axis.left.letter;
+  var rightText = r.side === "right" ? (r.axis.right.letter + " " + r.value) : r.axis.right.letter;
+  var html = "";
+  html += '<div class="axis-bar-row">';
+  html += '<span class="name-l">' + r.axis.left.label + '</span>';
+  html += '<div class="axis-bar-track-50">';
+  html += '<div class="axis-bar-half axis-bar-half-l"><div class="axis-bar-fill-l" style="width:' + leftFillPct + '%"></div></div>';
+  html += '<div class="axis-bar-center"></div>';
+  html += '<div class="axis-bar-half axis-bar-half-r"><div class="axis-bar-fill-r" style="width:' + rightFillPct + '%"></div></div>';
+  html += '</div>';
+  html += '<span class="name-r">' + r.axis.right.label + '</span>';
+  html += '</div>';
+  html += '<p class="axis-band-note">' + (r.side === "left" ? r.axis.left.label : r.axis.right.label) + ' ' + r.value + '/50 · ' + r.band + '</p>';
+  return html;
+}
+
+function listItems(arr) {
+  var out = "";
+  for (var i = 0; i < arr.length; i++) { out += '<li>' + arr[i] + '</li>'; }
+  return out;
+}
+
+function disclaimer() {
+  return '<footer class="disclaimer">Ce test est un outil de réflexion sur toi-même, pas une vérité figée pour la vie.<br>Pour aller plus loin, parles-en avec ton coach A4P Mental.</footer>';
+}
+
+function bind() {
+  var testModeBtn = document.getElementById("test-mode-btn");
+  if (testModeBtn) testModeBtn.onclick = function () {
+    state.screen = "intro";
+    render();
+    window.scrollTo(0,0);
+  };
+
+  var gateBtn = document.getElementById("gate-btn");
+  if (gateBtn) gateBtn.onclick = submitGateCode;
+
+  var gateInput = document.getElementById("gate-code");
+  if (gateInput) {
+    gateInput.focus();
+    gateInput.onkeydown = function (e) {
+      if (e.key === "Enter") { submitGateCode(); }
+    };
+  }
+
+  var startBtn = document.getElementById("start-btn");
+  if (startBtn) startBtn.onclick = function () { state.screen = "quiz"; state.index = 0; render(); window.scrollTo(0,0); };
+
+  var backBtn = document.getElementById("back-btn");
+  if (backBtn) backBtn.onclick = function () {
+    if (state.index > 0) {
+      var last = state.answers.pop();
+      state.rawSums[last.axis] -= last.score;
+      state.index -= 1;
+      render();
+      window.scrollTo(0,0);
+    }
+  };
+
+  var choices = document.querySelectorAll(".choice");
+  for (var i = 0; i < choices.length; i++) {
+    choices[i].onclick = function (e) {
+      var score = parseInt(e.currentTarget.getAttribute("data-score"), 10);
+      var axis = QUESTIONS[state.index].axis;
+      state.rawSums[axis] += score;
+      state.answers.push({ axis: axis, score: score });
+      state.index += 1;
+      if (state.index >= QUESTIONS.length) {
+        state.screen = "result";
+      }
+      render();
+      window.scrollTo(0,0);
+    };
+  }
+
+  var printBtn = document.getElementById("print-btn");
+  if (printBtn) printBtn.onclick = function () { window.print(); };
+
+  var restartBtn = document.getElementById("restart-btn");
+  if (restartBtn) restartBtn.onclick = function () {
+    state = {
+      screen: "gate", index: 0, answers: [], rawSums: [0, 0, 0, 0],
+      gateError: "", gateLoading: false, gateRemaining: null
+    };
+    render();
+    window.scrollTo(0,0);
+  };
+}
+
+render();
+</script>
+</body>
+</html>
