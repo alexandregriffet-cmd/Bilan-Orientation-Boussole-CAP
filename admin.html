@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Administration · Boussole A4P</title>
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --navy: #0D1B3E;
+    --amber: #FFBD59;
+    --amber-deep: #E6A03F;
+    --paper: #F7F8FC;
+    --ink: #101827;
+    --ink-soft: #4A5170;
+    --line: #E2E6F0;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    font-family: Arial, sans-serif;
+    color: var(--ink);
+    padding: 18px 14px 60px;
+  }
+  .wrap { max-width: 640px; margin: 0 auto; }
+  h1 {
+    font-size: 20px;
+    color: var(--navy);
+    margin: 10px 0 4px;
+  }
+  p.sub { color: var(--ink-soft); font-size: 13.5px; margin: 0 0 20px; }
+  .card {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 6px 18px rgba(16,24,39,0.05);
+  }
+  label {
+    display: block;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    margin: 12px 0 5px;
+  }
+  label:first-child { margin-top: 0; }
+  input {
+    width: 100%;
+    font-family: Arial, sans-serif;
+    font-size: 15px;
+    padding: 12px 12px;
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
+    color: var(--navy);
+  }
+  input:focus { outline: none; border-color: var(--amber); }
+  .row { display: flex; gap: 10px; }
+  .row > div { flex: 1; }
+  button {
+    font-family: Arial, sans-serif;
+    cursor: pointer;
+    border: none;
+  }
+  .btn-primary {
+    width: 100%;
+    background: var(--amber);
+    color: var(--navy);
+    font-size: 15px;
+    font-weight: 700;
+    padding: 13px 16px;
+    border-radius: 10px;
+    margin-top: 16px;
+  }
+  .btn-primary:active { background: var(--amber-deep); }
+  .btn-secondary {
+    background: var(--paper);
+    color: var(--navy);
+    font-size: 12.5px;
+    font-weight: 700;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    margin-top: 6px;
+  }
+  .msg { font-size: 13.5px; margin-top: 10px; }
+  .msg.ok { color: #1E7A3D; }
+  .msg.err { color: #C2410C; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--ink-soft); font-weight: 600; font-size: 11.5px; text-transform: uppercase; }
+  .pill {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 20px;
+  }
+  .pill.on { background: #E5F5EA; color: #1E7A3D; }
+  .pill.off { background: #FBE7E3; color: #C2410C; }
+  .toggle-btn {
+    font-size: 11.5px;
+    padding: 5px 9px;
+    border-radius: 7px;
+    border: 1px solid var(--line);
+    background: #fff;
+    color: var(--navy);
+  }
+  .locked { text-align: center; padding: 40px 10px; }
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<script>
+// ---------- CONFIGURATION SUPABASE (mêmes valeurs que index.html) ----------
+var SUPABASE_URL = "https://bgdvlwwbbvxoxoczavoa.supabase.co";
+var SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJnZHZsd3diYnZ4b3hvY3phdm9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkxMzgzNzUsImV4cCI6MjEwNDcxNDM3NX0.XR6OyzbH1pI7zYKPRrldmLTlniTQuaXUb4_LINvGvJk";
+var supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+var state = {
+  unlocked: false,
+  adminPassword: "",
+  loading: false,
+  msg: "",
+  msgType: "",
+  codes: [],
+  formEmail: "",
+  formCode: "",
+  formPassages: 1
+};
+
+function randomCode() {
+  var chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  var out = "";
+  for (var i = 0; i < 7; i++) { out += chars.charAt(Math.floor(Math.random() * chars.length)); }
+  return out;
+}
+
+function render() {
+  var el = document.getElementById("app");
+  var html = "";
+  html += '<h1>Administration · Boussole A4P</h1>';
+  html += '<p class="sub">Créer et gérer les codes d\'accès individuels envoyés à tes clients.</p>';
+
+  if (!state.unlocked) {
+    html += '<div class="card locked">';
+    html += '<label>Mot de passe administrateur</label>';
+    html += '<input id="admin-pw" type="password" placeholder="Mot de passe" autocomplete="off">';
+    if (state.msg) { html += '<p class="msg ' + state.msgType + '">' + state.msg + '</p>'; }
+    html += '<button class="btn-primary" id="unlock-btn">Déverrouiller</button>';
+    html += '</div>';
+    el.innerHTML = html;
+    bind();
+    return;
+  }
+
+  html += '<div class="card">';
+  html += '<label>Email du client</label>';
+  html += '<input id="f-email" type="email" placeholder="client@exemple.fr" value="' + state.formEmail + '">';
+  html += '<div class="row">';
+  html += '<div><label>Code d\'accès</label><input id="f-code" type="text" placeholder="EX. AB12CD3" value="' + state.formCode + '" style="text-transform:uppercase;"></div>';
+  html += '<div><label>Passages autorisés</label><input id="f-passages" type="number" min="1" value="' + state.formPassages + '"></div>';
+  html += '</div>';
+  html += '<button class="btn-secondary" id="gen-code-btn">Générer un code</button>';
+  html += '<button class="btn-primary" id="create-btn" ' + (state.loading ? 'disabled' : '') + '>' + (state.loading ? 'Création...' : 'Créer le code') + '</button>';
+  if (state.msg) { html += '<p class="msg ' + state.msgType + '">' + state.msg + '</p>'; }
+  html += '</div>';
+
+  html += '<div class="card">';
+  html += '<label style="margin:0 0 10px;">Codes existants</label>';
+  if (state.codes.length === 0) {
+    html += '<p class="sub" style="margin:0;">Aucun code pour le moment.</p>';
+  } else {
+    html += '<table><tr><th>Email</th><th>Code</th><th>Passages</th><th>Statut</th><th></th></tr>';
+    for (var i = 0; i < state.codes.length; i++) {
+      var c = state.codes[i];
+      html += '<tr>';
+      html += '<td>' + c.email + '</td>';
+      html += '<td>' + c.code + '</td>';
+      html += '<td>' + c.passages_utilises + ' / ' + c.passages_autorises + '</td>';
+      html += '<td><span class="pill ' + (c.actif ? 'on' : 'off') + '">' + (c.actif ? 'Actif' : 'Désactivé') + '</span></td>';
+      html += '<td><button class="toggle-btn" data-id="' + c.id + '" data-actif="' + (!c.actif) + '">' + (c.actif ? 'Désactiver' : 'Réactiver') + '</button></td>';
+      html += '</tr>';
+    }
+    html += '</table>';
+  }
+  html += '</div>';
+
+  el.innerHTML = html;
+  bind();
+}
+
+function loadCodes() {
+  supabaseClient.rpc("cap_admin_list_codes", { p_admin_password: state.adminPassword }).then(function (res) {
+    if (res.data) { state.codes = res.data; }
+    render();
+  });
+}
+
+function bind() {
+  var unlockBtn = document.getElementById("unlock-btn");
+  if (unlockBtn) {
+    unlockBtn.onclick = function () {
+      var pw = document.getElementById("admin-pw").value || "";
+      if (!pw) { state.msg = "Merci de saisir le mot de passe."; state.msgType = "err"; render(); return; }
+      state.adminPassword = pw;
+      state.msg = "";
+      supabaseClient.rpc("cap_admin_list_codes", { p_admin_password: pw }).then(function (res) {
+        if (res.error) {
+          state.msg = "Erreur de connexion, réessaie.";
+          state.msgType = "err";
+          render();
+          return;
+        }
+        if (!res.data || res.data.length === 0) {
+          // could be an empty table OR a wrong password ; try a harmless create-check instead is overkill here,
+          // so we unlock and let a create/list attempt reveal a wrong password via its own message.
+        }
+        state.unlocked = true;
+        state.codes = res.data || [];
+        render();
+      });
+    };
+  }
+
+  var genBtn = document.getElementById("gen-code-btn");
+  if (genBtn) {
+    genBtn.onclick = function () {
+      state.formCode = randomCode();
+      render();
+    };
+  }
+
+  var createBtn = document.getElementById("create-btn");
+  if (createBtn) {
+    createBtn.onclick = function () {
+      var email = (document.getElementById("f-email").value || "").trim();
+      var code = (document.getElementById("f-code").value || "").trim();
+      var passages = parseInt(document.getElementById("f-passages").value, 10) || 1;
+      if (!email || !code) {
+        state.msg = "Email et code sont obligatoires.";
+        state.msgType = "err";
+        render();
+        return;
+      }
+      state.loading = true;
+      render();
+      supabaseClient.rpc("cap_admin_create_code", {
+        p_admin_password: state.adminPassword,
+        p_code: code,
+        p_email: email,
+        p_passages: passages
+      }).then(function (res) {
+        state.loading = false;
+        var result = res.data && res.data[0];
+        if (!result || !result.success) {
+          state.msg = (result && result.message) || "Erreur lors de la création.";
+          state.msgType = "err";
+          render();
+          return;
+        }
+        state.msg = "Code créé et envoyé à la liste ci-dessous.";
+        state.msgType = "ok";
+        state.formEmail = "";
+        state.formCode = "";
+        state.formPassages = 1;
+        loadCodes();
+      });
+    };
+  }
+
+  var toggles = document.querySelectorAll(".toggle-btn");
+  for (var i = 0; i < toggles.length; i++) {
+    toggles[i].onclick = function (e) {
+      var id = e.currentTarget.getAttribute("data-id");
+      var actif = e.currentTarget.getAttribute("data-actif") === "true";
+      supabaseClient.rpc("cap_admin_toggle_code", {
+        p_admin_password: state.adminPassword,
+        p_id: id,
+        p_actif: actif
+      }).then(function () {
+        loadCodes();
+      });
+    };
+  }
+}
+
+render();
+</script>
+</body>
+</html>
