@@ -198,6 +198,15 @@ function loadCodes() {
   });
 }
 
+function saveForm() {
+  var e = document.getElementById("f-email");
+  var c = document.getElementById("f-code");
+  var p = document.getElementById("f-passages");
+  if (e) { state.formEmail = e.value.trim(); }
+  if (c) { state.formCode = c.value.trim(); }
+  if (p) { state.formPassages = parseInt(p.value, 10) || 1; }
+}
+
 function bind() {
   var unlockBtn = document.getElementById("unlock-btn");
   if (unlockBtn) {
@@ -227,6 +236,7 @@ function bind() {
   var genBtn = document.getElementById("gen-code-btn");
   if (genBtn) {
     genBtn.onclick = function () {
+      saveForm();
       state.formCode = randomCode();
       render();
     };
@@ -235,6 +245,7 @@ function bind() {
   var createBtn = document.getElementById("create-btn");
   if (createBtn) {
     createBtn.onclick = function () {
+      saveForm();
       var email = (document.getElementById("f-email").value || "").trim();
       var code = (document.getElementById("f-code").value || "").trim();
       var passages = parseInt(document.getElementById("f-passages").value, 10) || 1;
